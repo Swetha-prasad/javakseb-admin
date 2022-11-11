@@ -228,7 +228,31 @@ public class Service {
                     catch (Exception e){
                         System.out.println(e);
                     }
+                case 8:
+                    try{
+                        Class.forName("com.mysql.jdbc.Driver");
+                        Connection con = (Connection) DriverManager.getConnection("jdbc:mysql://localhost:3306/admindb", "root", "");
+                        String sql = "SELECT c.name,c.address,b.`bill`, b.`totalunit` FROM `bill` b JOIN consumer c ON b.userid=c.id ORDER BY b.`bill`DESC LIMIT 2";
+                        Statement stmt = con.createStatement();
+                        ResultSet rs = stmt.executeQuery(sql);
+                        while(rs.next()){
+                            name = rs.getString("c.name");
+                            address = rs.getString("c.address");
+                            int bill = rs.getInt("b.bill");
+                            int total = rs.getInt("totalunit");
+                            System.out.println("name ="+name);
+                            System.out.println("address ="+address);
+                            System.out.println("total bill = "+bill);
+                            System.out.println("total unit ="+total+'\n');
+                        }
+                    }
+                    catch (Exception e){
+                        System.out.println(e);
+                    }
                     break;
+
+
+
 
 
 
