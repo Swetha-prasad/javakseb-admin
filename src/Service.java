@@ -1,6 +1,7 @@
 import com.mysql.jdbc.Connection;
 import java.sql.DriverManager;
 import com.mysql.jdbc.PreparedStatement;
+import java.util.GregorianCalendar;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -68,7 +69,7 @@ public class Service {
                         try {
                             Class.forName("com.mysql.jdbc.Driver");
                             Connection con = (Connection) DriverManager.getConnection("jdbc:mysql://localhost:3306/admindb", "root", "");
-                            String sql = "SELECT  `name`, `address`, `phno`, `email` FROM `consumer` WHERE `phno`='" + phone + "'";
+                            String sql = "SELECT  `name`, `address`, `phno`, `email` FROM `consumer` WHERE `phno`='" + phone + '"';
                             Statement stmt = con.createStatement();
                             ResultSet rs = stmt.executeQuery(sql);
                             while (rs.next()) {
@@ -151,54 +152,91 @@ public class Service {
 
 
                 case 6:
-                    Date dt=new Date();
-                    Calendar cal= Calendar.getInstance();
-                    cal.setTime(dt);
-                    System.out.println(dt);
-                    System.out.println(cal);
-                    int month=cal.get(Calendar.DAY_OF_MONTH);
-                    int year=cal.get(Calendar.YEAR);
-                    int status = 1;
-                    try{
+                    System.out.println("Generate Bill");
+//getting current month and year
+                    GregorianCalendar date = new GregorianCalendar();
+                    int currentMonth = date.get(Calendar.MONTH);
+                    int currentYear = date.get(Calendar.YEAR);
+                    currentMonth = currentMonth+1;
+                    try {
+                        //
                         Class.forName("com.mysql.jdbc.Driver");
-                        Connection con= (Connection) DriverManager.getConnection("jdbc:mysql://localhost:3306/admindb","root","");
-                        String sql = "DELETE FROM `bill` WHERE `month`= '" + month + "'AND `year`= '" + year + "'";
+                        Connection con = (Connection) DriverManager.getConnection("jdbc:mysql://localhost:3306/admindb", "root", "");
+                        String sql = "DELETE FROM `bill` WHERE `month`= '" + currentMonth + "'AND `year`= '" + currentYear + "'";
                         Statement stmt = con.createStatement();
                         stmt.executeUpdate(sql);
+                        System.out.println("Previous data deleted succesfully");
                         String sql1 = "SELECT `id` FROM `consumer` ";
-                        //String sql = "SELECT `id` FROM `customer`;
                         Statement stmt1 = con.createStatement();
                         ResultSet rs = stmt1.executeQuery(sql1);
-                        while(rs.next())
-                        {
+                        while (rs.next()) {
                             int id = rs.getInt("id");
-                            String sql2 = "SELECT SUM(`unit`) FROM `usages`  WHERE `userid`='" + id + "'  AND MONTH(`datetime`)='" + month + "' AND YEAR(`datetime`)='" + year + "'";
+                            String sql2 = "select SUM(`unit`) from usages where month(datetime) = '"+currentMonth+"' AND year(datetime) = '"+currentYear+"' AND `userid` ='"+id+"'";
                             Statement stmt2 = con.createStatement();
-                            ResultSet rs2 = stmt2.executeQuery(sql2);
-                            while (rs2.next())
-                            {
-                                int add = rs2.getInt("SUM(`unit`)");
-                                //int status = 1;
+                            ResultSet rs1 = stmt2.executeQuery(sql2);
+                            while (rs1.next()) {
+                                int add = rs1.getInt("SUM(`Unit`)");
+                                int status = 0;
                                 int totalBill = add * 5;
-                                String sql3 = "INSERT INTO `bill`(`userid`, `month`, `year`, `bill`, `paid status`, `totalunit`,`billdate`, `duedate`) VALUES(?,?,?,?,?,?,now(),now()+interval 14 day)";
+                                //generating random number for invoice
+                                int min = 10000;
+                                int max = 99999;
+                                int invoice = (int)(Math.random() * (max - min + 1) + min);
+                                // String sql3 = "INSERT INTO `bill`(`User_Id`, `month`, `year`, `bill`, `paid status`, `bill date`, `total_unit`) VALUES (%s,%s,%s,%s,%s,now(),%s)";
+                                String sql3 = "INSERT INTO `bill`(`userid`, `month`, `year`, `bill`, `paid status`, `billdate`, `totalunit`) VALUES (?,?,?,?,?,now(),?)";
                                 PreparedStatement stmt3 = (PreparedStatement) con.prepareStatement(sql3);
-                                //ResultSet rs3 = stmt3.executeQuery(sql3);
-                                stmt3.setInt(1,id);
-                                stmt3.setInt(2,month);
-                                stmt3.setInt(3,year);
-                                stmt3.setInt(4,totalBill);
-                                stmt3.setInt(5,status);
-                                stmt3.setInt(6,add);
+                                stmt3.setInt(1, id);
+                                stmt3.setInt(2, currentMonth);
+                                stmt3.setInt(3, currentYear);
+                                stmt3.setInt(4, totalBill);
+                                stmt3.setInt(5, 0);
+                                stmt3.setInt(6, add);
                                 stmt3.executeUpdate();
-                                System.out.println("value inserted successfully.........!");
                             }
+                        }
+
+                    }
+                    catch(Exception e){
+                        System.out.println(e);
+                    }
+                case 7:
+                    try{
+                        Class.forName("com.mysql.jdbc.Driver");
+                        Connection con = (Connection) DriverManager.getConnection("jdbc:mysql://localhost:3306/admindb", "root", "");
+                        String sql = "SELECT  c.name,c.address,b.`month`, b.`year`, b.`bill`, b.`paid status`, b.`billdate`,  b.`totalunit` FROM `bill` b JOIN consumer c ON b.userid=c.id";
+                        Statement stmt = con.createStatement();
+                        ResultSet rs = stmt.executeQuery(sql);
+                        while(rs.next()){
+                            name = rs.getString("c.name");
+                            address = rs.getString("c.address");
+                            int month1 = rs.getInt("b.month");
+                            int year1 = rs.getInt("b.year");
+                            int bill = rs.getInt("b.bill");
+                            String sta = rs.getString("b.paid status");
+                            String date1 = rs.getString("b.billdate");
+                            int total = rs.getInt("b.totalunit");
+                            System.out.println("name ="+name);
+                            System.out.println("address ="+address);
+                            System.out.println("month ="+month1);
+                            System.out.println("year = "+year1);
+                            System.out.println("total bill = "+bill);
+                            System.out.println("status="+sta);
+                            System.out.println("bill date="+date1);
+                            System.out.println("total unit ="+total);
                         }
                     }
                     catch (Exception e){
-                        System.out.println((e));
+                        System.out.println(e);
                     }
+                    break;
+
+
+
+
+            }
 
             }
         }
+
     }
-}
+
