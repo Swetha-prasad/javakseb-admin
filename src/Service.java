@@ -5,6 +5,8 @@ import com.mysql.jdbc.PreparedStatement;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Scanner;
 
 public class Service {
@@ -149,7 +151,52 @@ public class Service {
 
 
                 case 6:
-                    System.exit(0);
+                    Date dt=new Date();
+                    Calendar cal= Calendar.getInstance();
+                    cal.setTime(dt);
+                    System.out.println(dt);
+                    System.out.println(cal);
+                    int month=cal.get(Calendar.DAY_OF_MONTH);
+                    int year=cal.get(Calendar.YEAR);
+                    int status = 1;
+                    try{
+                        Class.forName("com.mysql.jdbc.Driver");
+                        Connection con= (Connection) DriverManager.getConnection("jdbc:mysql://localhost:3306/admindb","root","");
+                        String sql = "DELETE FROM `bill` WHERE `month`= '" + month + "'AND `year`= '" + year + "'";
+                        Statement stmt = con.createStatement();
+                        stmt.executeUpdate(sql);
+                        String sql1 = "SELECT `id` FROM `consumer` ";
+                        //String sql = "SELECT `id` FROM `customer`;
+                        Statement stmt1 = con.createStatement();
+                        ResultSet rs = stmt1.executeQuery(sql1);
+                        while(rs.next())
+                        {
+                            int id = rs.getInt("id");
+                            String sql2 = "SELECT SUM(`unit`) FROM `usages`  WHERE `userid`='" + id + "'  AND MONTH(`datetime`)='" + month + "' AND YEAR(`datetime`)='" + year + "'";
+                            Statement stmt2 = con.createStatement();
+                            ResultSet rs2 = stmt2.executeQuery(sql2);
+                            while (rs2.next())
+                            {
+                                int add = rs2.getInt("SUM(`unit`)");
+                                //int status = 1;
+                                int totalBill = add * 5;
+                                String sql3 = "INSERT INTO `bill`(`userid`, `month`, `year`, `bill`, `paid status`, `totalunit`,`billdate`, `duedate`) VALUES(?,?,?,?,?,?,now(),now()+interval 14 day)";
+                                PreparedStatement stmt3 = (PreparedStatement) con.prepareStatement(sql3);
+                                //ResultSet rs3 = stmt3.executeQuery(sql3);
+                                stmt3.setInt(1,id);
+                                stmt3.setInt(2,month);
+                                stmt3.setInt(3,year);
+                                stmt3.setInt(4,totalBill);
+                                stmt3.setInt(5,status);
+                                stmt3.setInt(6,add);
+                                stmt3.executeUpdate();
+                                System.out.println("value inserted successfully.........!");
+                            }
+                        }
+                    }
+                    catch (Exception e){
+                        System.out.println((e));
+                    }
 
             }
         }
