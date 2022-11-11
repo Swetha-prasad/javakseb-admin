@@ -3,6 +3,8 @@ import java.sql.DriverManager;
 import com.mysql.jdbc.PreparedStatement;
 
 import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.Scanner;
 
 public class Service {
@@ -60,7 +62,7 @@ public class Service {
 
                 case 2:
                     System.out.println("Search customer");
-                    break;
+
                 case 3:
                     System.out.println("Delete customer");
                     break;
@@ -69,7 +71,34 @@ public class Service {
                     break;
                 case 5:
                     System.out.println("View all customer");
+                    System.out.println("View all customer");
+                    try{
+                        Class.forName("com.mysql.jdbc.Driver");
+                        Connection con= (Connection) DriverManager.getConnection("jdbc:mysql://localhost:3306/admindb","root","");
+                        String sql = "SELECT `code`, `name`, `address`, `phno`, `email` FROM `consumer`";
+                        Statement stmt=con.createStatement();
+                        ResultSet rs=stmt.executeQuery(sql);
+                        while(rs.next()){
+                            code = rs.getInt("code");
+                            name = rs.getString("name");
+                            address = rs.getString("address");
+                            phone = rs.getInt("phno");
+                            email = rs.getString("email");
+                            System.out.println("code = "+code);
+                            System.out.println("name = "+name);
+                            System.out.println("address = "+address);
+                            System.out.println("phone number = "+phone);
+                            System.out.println("Email id = "+email+'\n');
+                        }
+                    }
+                    catch (Exception e){
+                        System.out.println((e));
+                    }
+
+
                     break;
+
+
                 case 6:
                     System.exit(0);
 
